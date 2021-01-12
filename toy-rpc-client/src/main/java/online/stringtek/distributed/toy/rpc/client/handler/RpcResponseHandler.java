@@ -1,4 +1,4 @@
-package online.stringtek.distributed.toy.rpc.demo.consumer.client.handler;
+package online.stringtek.distributed.toy.rpc.client.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

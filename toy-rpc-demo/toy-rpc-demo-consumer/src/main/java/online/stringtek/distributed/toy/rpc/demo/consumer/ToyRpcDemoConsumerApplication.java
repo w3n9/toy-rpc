@@ -1,4 +1,4 @@
-package online.stringtek.distributed.toy.rpc;
+package online.stringtek.distributed.toy.rpc.demo.consumer;
 
 
 import org.springframework.boot.SpringApplication;
@@ -7,6 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class ToyRpcDemoConsumerApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ToyRpcDemoProviderApplication.class,args);
+        SpringApplication.run(ToyRpcDemoConsumerApplication.class,args);
     }
 }

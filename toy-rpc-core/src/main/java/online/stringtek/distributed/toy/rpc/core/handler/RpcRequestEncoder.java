@@ -1,9 +1,9 @@
-package online.stringtek.distributed.toy.rpc.demo.consumer.core.handler;
+package online.stringtek.distributed.toy.rpc.core.handler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import online.stringtek.distributed.toy.rpc.demo.consumer.core.serializer.Serializer;
+import online.stringtek.distributed.toy.rpc.core.serializer.Serializer;
 
 public class RpcRequestEncoder extends MessageToByteEncoder<Object> {
 

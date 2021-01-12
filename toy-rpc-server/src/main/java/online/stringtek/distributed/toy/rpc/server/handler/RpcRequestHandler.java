@@ -1,4 +1,4 @@
-package online.stringtek.distributed.toy.rpc.demo.consumer.server.handler;
+package online.stringtek.distributed.toy.rpc.server.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -23,7 +23,7 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter implements A
         log.info("{}",msg);
         try{
             RpcRequest rpcRequest=(RpcRequest) msg;//可能类型转换错误
-            Class<?> clazz = rpcRequest.getClazz();//接口
+            Class<?> clazz = Class.forName(rpcRequest.getClassName());//接口
             String methodName = rpcRequest.getMethodName();
             Object[] parameters = rpcRequest.getParameters();
             Class<?>[] parameterTypes = rpcRequest.getParameterTypes();

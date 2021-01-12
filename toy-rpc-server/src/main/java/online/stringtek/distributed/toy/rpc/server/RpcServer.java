@@ -1,4 +1,4 @@
-package online.stringtek.distributed.toy.rpc.demo.consumer.server;
+package online.stringtek.distributed.toy.rpc.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import online.stringtek.distributed.toy.rpc.core.common.RpcRequest;
 import online.stringtek.distributed.toy.rpc.core.handler.RpcRequestDecoder;
 import online.stringtek.distributed.toy.rpc.core.serializer.JSONSerializer;
-import online.stringtek.distributed.toy.rpc.demo.consumer.server.handler.RpcRequestHandler;
+import online.stringtek.distributed.toy.rpc.server.handler.RpcRequestHandler;
 
 import java.net.InetSocketAddress;
 @Slf4j

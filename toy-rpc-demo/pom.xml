@@ -10,10 +10,54 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>toy-rpc-demo</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>toy-rpc-demo-consumer</module>
+        <module>toy-rpc-demo-provider</module>
+        <module>toy-rpc-demo-api</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <spring.boot.version>2.4.1</spring.boot.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>online.stringtek.distributed</groupId>
+                <artifactId>toy-rpc-client</artifactId>
+                <version>${parent.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>online.stringtek.distributed</groupId>
+                <artifactId>toy-rpc-server</artifactId>
+                <version>${parent.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>online.stringtek.distributed</groupId>
+                <artifactId>toy-rpc-demo-api</artifactId>
+                <version>${parent.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

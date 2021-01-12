@@ -1,0 +1,7 @@
+server:
+  port: 9000
+
+toy:
+  rpc:
+    remote-host: localhost
+    port: 8001

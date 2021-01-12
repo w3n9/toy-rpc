@@ -1,4 +1,4 @@
-package online.stringtek.distributed.toy.rpc.demo.consumer.core.common;
+package online.stringtek.distributed.toy.rpc.core.common;
 
 import lombok.Data;
 
@@ -15,7 +15,7 @@ public class RpcRequest {
      * 类名
      */
 
-    private Class<?> clazz;
+    private String className;
 
     /**
      * 方法名
