@@ -1,5 +1,6 @@
 package online.stringtek.distributed.toy.rpc.server.handler;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.context.ApplicationContextAware;
 import java.lang.reflect.Method;
 
 @Slf4j
+@ChannelHandler.Sharable
 public class RpcRequestHandler extends ChannelInboundHandlerAdapter implements ApplicationContextAware {
     private ApplicationContext applicationContext;
     @Override
@@ -31,9 +33,11 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter implements A
             Method method = clazz.getDeclaredMethod(methodName, parameterTypes);
             method.setAccessible(true);
             Object result = method.invoke(object, parameters);
+            log.info("result:{}",result);
             //写回客户端
             ctx.channel().writeAndFlush(result);
         }catch (Exception e){
+            e.printStackTrace();
             log.error("{}:{}",e,e.getMessage());
             //TODO 返回非法请求
         }

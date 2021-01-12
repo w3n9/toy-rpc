@@ -7,15 +7,20 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
+import online.stringtek.distributed.toy.rpc.core.common.RpcConstant;
 import online.stringtek.distributed.toy.rpc.core.common.RpcRequest;
 import online.stringtek.distributed.toy.rpc.core.handler.RpcRequestDecoder;
 import online.stringtek.distributed.toy.rpc.core.serializer.JSONSerializer;
 import online.stringtek.distributed.toy.rpc.server.handler.RpcRequestHandler;
+import online.stringtek.distributed.toy.rpc.core.handler.RpcResponseEncoder;
 
 import java.net.InetSocketAddress;
 @Slf4j
 public class RpcServer {
-    private static final int MAX_FRAME_LENGTH=4096;//byte
+    private final RpcRequestHandler rpcRequestHandler;
+    public RpcServer(RpcRequestHandler rpcRequestHandler){
+        this.rpcRequestHandler=rpcRequestHandler;
+    }
     public void start(String hostname,int port){
         EventLoopGroup bossGroup=new NioEventLoopGroup();
         EventLoopGroup workerGroup=new NioEventLoopGroup();
@@ -27,13 +32,12 @@ public class RpcServer {
                     protected void initChannel(NioSocketChannel nioSocketChannel) {
                         //入站
                         nioSocketChannel.pipeline()
-                                .addLast(new LengthFieldBasedFrameDecoder(MAX_FRAME_LENGTH,0,4,0,4))
+                                .addLast(new LengthFieldBasedFrameDecoder(RpcConstant.MAX_FRAME_LENGTH,0,4,0,4))
                                 .addLast(new RpcRequestDecoder(RpcRequest.class,new JSONSerializer()))
-                                .addLast(new RpcRequestHandler());
+                                .addLast(rpcRequestHandler);
                         //出站
                         nioSocketChannel.pipeline()
-                                .addLast()
-                                .addLast();
+                                .addLast(new RpcResponseEncoder(new JSONSerializer()));
                     }
                 });
         try{
@@ -48,12 +52,5 @@ public class RpcServer {
 //            workerGroup.shutdownGracefully();
 //            bossGroup.shutdownGracefully();
         }
-
-
     }
-
-    public static void main(String[] args) throws InterruptedException {
-        new RpcServer().start("localhost",23231);
-    }
-
 }

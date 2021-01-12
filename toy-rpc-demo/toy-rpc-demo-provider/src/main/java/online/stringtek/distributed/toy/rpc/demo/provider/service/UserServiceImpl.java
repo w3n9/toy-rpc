@@ -1,5 +1,6 @@
 package online.stringtek.distributed.toy.rpc.demo.provider.service;
 
+import online.stringtek.distributed.toy.rpc.demo.api.service.UserService;
 import org.springframework.stereotype.Service;
 
 @Service
