@@ -9,24 +9,35 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>rmi-server</module>
-        <module>rmi-client</module>
-        <module>rmi-common</module>
+        <module>toy-rpc-core</module>
+        <module>toy-rpc-client</module>
+        <module>toy-rpc-server</module>
     </modules>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.16</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>1.2.75</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>4.1.56.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>online.stringtek.distributed</groupId>
+                <artifactId>toy-rpc-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.16</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>4.1.56.Final</version>
-        </dependency>
-
-    </dependencies>
+        </dependencies>
+    </dependencyManagement>
 
 </project>
