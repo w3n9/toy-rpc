@@ -1,9 +1,9 @@
-package online.stringtek.distributed.toy.rpc.core.common;
+package online.stringtek.distributed.toy.rpc.demo.consumer.core.common;
 
 import lombok.Data;
 
 @Data
-public class RpcRequest<T> {
+public class RpcRequest {
 
     /**
      * 请求对象的ID
@@ -15,7 +15,7 @@ public class RpcRequest<T> {
      * 类名
      */
 
-    private Class<T> clazz;
+    private Class<?> clazz;
 
     /**
      * 方法名

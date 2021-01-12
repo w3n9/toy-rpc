@@ -1,4 +1,4 @@
-package online.stringtek.distributed.toy.rpc.client.handler;
+package online.stringtek.distributed.toy.rpc.demo.consumer.client.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -8,11 +8,11 @@ import online.stringtek.distributed.toy.rpc.core.common.RpcRequest;
 import java.util.concurrent.Callable;
 
 @Data
-public class RpcRequestHandler extends ChannelInboundHandlerAdapter implements Callable<Object> {
+public class RpcResponseHandler extends ChannelInboundHandlerAdapter implements Callable<Object> {
 
     //TODO 解决线程安全问题
     private ChannelHandlerContext ctx;
-    private RpcRequest<?> rpcRequest;
+    private RpcRequest rpcRequest;
     private Object result;
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {

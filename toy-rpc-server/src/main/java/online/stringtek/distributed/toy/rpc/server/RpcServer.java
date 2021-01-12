@@ -1,17 +1,22 @@
-package online.stringtek.distributed.toy.rpc.server;
+package online.stringtek.distributed.toy.rpc.demo.consumer.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import lombok.extern.slf4j.Slf4j;
 import online.stringtek.distributed.toy.rpc.core.common.RpcRequest;
-import online.stringtek.distributed.toy.rpc.core.handler.RpcDecoder;
+import online.stringtek.distributed.toy.rpc.core.handler.RpcRequestDecoder;
 import online.stringtek.distributed.toy.rpc.core.serializer.JSONSerializer;
-import online.stringtek.distributed.toy.rpc.server.handler.RpcHandler;
+import online.stringtek.distributed.toy.rpc.demo.consumer.server.handler.RpcRequestHandler;
 
+import java.net.InetSocketAddress;
+@Slf4j
 public class RpcServer {
-    public void start(String ip,int port) throws InterruptedException {
+    private static final int MAX_FRAME_LENGTH=4096;//byte
+    public void start(String hostname,int port){
         EventLoopGroup bossGroup=new NioEventLoopGroup();
         EventLoopGroup workerGroup=new NioEventLoopGroup();
         ServerBootstrap serverBootstrap = new ServerBootstrap();
@@ -20,20 +25,35 @@ public class RpcServer {
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
                     protected void initChannel(NioSocketChannel nioSocketChannel) {
+                        //入站
                         nioSocketChannel.pipeline()
-                                .addLast(new RpcDecoder(RpcRequest.class,new JSONSerializer()))
-                                .addLast(new RpcHandler());
+                                .addLast(new LengthFieldBasedFrameDecoder(MAX_FRAME_LENGTH,0,4,0,4))
+                                .addLast(new RpcRequestDecoder(RpcRequest.class,new JSONSerializer()))
+                                .addLast(new RpcRequestHandler());
+                        //出站
+                        nioSocketChannel.pipeline()
+                                .addLast()
+                                .addLast();
                     }
                 });
-//        ChannelFuture future = serverBootstrap.bind(port).sync();
-        serverBootstrap.bind(port);
-        //同步监听
-        System.out.println("listening on"+ip+":"+port);
+        try{
+            ChannelFuture future = serverBootstrap.bind(new InetSocketAddress(hostname, port)).sync();
+            //同步监听
+            log.info("rpc server is listening on "+hostname+":"+port);
+//            future.channel().closeFuture().sync();
+//            System.out.println("rpc server is closed.");
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally{
+//            workerGroup.shutdownGracefully();
+//            bossGroup.shutdownGracefully();
+        }
+
 
     }
 
     public static void main(String[] args) throws InterruptedException {
-        new RpcServer().start("127.0.0.1",23231);
+        new RpcServer().start("localhost",23231);
     }
 
 }

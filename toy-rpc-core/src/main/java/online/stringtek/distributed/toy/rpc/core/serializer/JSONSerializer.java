@@ -1,4 +1,4 @@
-package online.stringtek.distributed.toy.rpc.core.serializer;
+package online.stringtek.distributed.toy.rpc.demo.consumer.core.serializer;
 
 import com.alibaba.fastjson.JSON;
 
