@@ -29,7 +29,6 @@ import java.util.concurrent.ScheduledExecutorService;
 public class ToyRpcClientZooKeeperContext {
     private final ZooKeeperRegistry registry;
 
-    // k 对应的zk节点路径 | v 对应的Rpc客户端
     private final Map<String, Map<String,RpcClientWrapper>> rpcClientMap;
     private final Map<String,Boolean> watchedMap;
 
@@ -113,22 +112,11 @@ public class ToyRpcClientZooKeeperContext {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 //TODO 使用策略模式
-//                // 随机访问模式
-//                Optional<RpcClientWrapper> wrapperOptional = values.stream().skip(new Random().nextInt(values.size())).findFirst();
-//                RpcClientWrapper rpcClientWrapper = wrapperOptional.orElseGet(null);
-//                RpcClient rpcClient = rpcClientWrapper.getRpcClient();
-//                return method.invoke(rpcClient.proxy(clazz),args);
-
-                List<ServiceInfo> serviceInfos = registry.get(providerName);
-                Optional<ServiceInfo> first = serviceInfos.stream().sorted(Comparator.comparingLong(ServiceInfo::getExecuteTime)).findFirst();
-                ServiceInfo serviceInfo = first.get();
-                RpcClient rpcClient = providerMap.get(serviceInfo.getInstancePath()).getRpcClient();
-                long start=System.currentTimeMillis();
-                Object ans = method.invoke(rpcClient.proxy(clazz), args);
-                serviceInfo.setExecuteTime(System.currentTimeMillis()-start);
-                serviceInfo.setResponseTimeStamp(System.currentTimeMillis());
-                registry.getCurator().setData().forPath(serviceInfo.getInstancePath(),JSON.toJSONBytes(serviceInfo));
-                return ans;
+                // 随机访问模式
+                Optional<RpcClientWrapper> wrapperOptional = values.stream().skip(new Random().nextInt(values.size())).findFirst();
+                RpcClientWrapper rpcClientWrapper = wrapperOptional.orElseGet(null);
+                RpcClient rpcClient = rpcClientWrapper.getRpcClient();
+                return method.invoke(rpcClient.proxy(clazz),args);
             }
         });
     }
