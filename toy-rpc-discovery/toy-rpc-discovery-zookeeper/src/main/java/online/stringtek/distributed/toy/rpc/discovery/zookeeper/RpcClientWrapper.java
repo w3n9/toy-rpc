@@ -5,14 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import online.stringtek.distributed.toy.rpc.client.RpcClient;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
 @Builder
 @Data
-@AllArgsConstructor
 public class RpcClientWrapper {
     private RpcClient rpcClient;
-    private int responseTime;//单位ms
     public RpcClientWrapper(RpcClient rpcClient){
         this.rpcClient=rpcClient;
-        responseTime=0;
     }
 }

@@ -9,6 +9,11 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 @Component
 public class ToyRpcListener implements ApplicationRunner {
     @Autowired
@@ -18,6 +23,21 @@ public class ToyRpcListener implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         registry.register(serviceInfo);
+        ScheduledExecutorService scheduledExecutorService= Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleAtFixedRate(()->{
+            //定时上报
+            try {
+                List<ServiceInfo> serviceInfos = registry.get("demo-provider");
+                for (ServiceInfo info : serviceInfos) {
+                    if(System.currentTimeMillis()-info.getResponseTimeStamp()>5000){
+                        registry.unRegister(info);
+                        System.out.println("unregister");
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        },5,5,TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(()->{
             try {
                 registry.unRegister(serviceInfo);

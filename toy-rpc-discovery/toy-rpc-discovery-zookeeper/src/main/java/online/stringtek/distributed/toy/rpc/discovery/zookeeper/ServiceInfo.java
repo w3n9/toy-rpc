@@ -13,4 +13,6 @@ public class ServiceInfo {
     private String ip;
     private int port;
     private String instancePath;
+    private long executeTime;
+    private long responseTimeStamp;
 }

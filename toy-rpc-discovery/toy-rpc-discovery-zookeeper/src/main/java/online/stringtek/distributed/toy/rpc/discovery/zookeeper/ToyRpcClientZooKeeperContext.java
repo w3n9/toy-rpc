@@ -14,8 +14,13 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.ZKUtil;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Consumer需要使用这个类来维护RpcClient
@@ -47,7 +52,7 @@ public class ToyRpcClientZooKeeperContext {
         watch(providerName);
     }
 
-    public void add(String providerName,ServiceInfo serviceInfo) throws InterruptedException {
+    public void add(String providerName,ServiceInfo serviceInfo) throws InterruptedException, IOException {
         String ip = serviceInfo.getIp();
         int port = serviceInfo.getPort();
         RpcClient rpcClient = new RpcClient();
@@ -55,6 +60,10 @@ public class ToyRpcClientZooKeeperContext {
         if(!rpcClientMap.containsKey(providerName))
             rpcClientMap.put(providerName,new HashMap<>());
         Map<String, RpcClientWrapper> providerMap = rpcClientMap.get(providerName);
+        //如果原来有这个，则先移除再添加
+        if(providerMap.containsKey(serviceInfo.getInstancePath())){
+            providerMap.get(serviceInfo.getInstancePath()).getRpcClient().close();
+        }
         providerMap.put(serviceInfo.getInstancePath(),new RpcClientWrapper(rpcClient));
     }
     /**
@@ -91,6 +100,7 @@ public class ToyRpcClientZooKeeperContext {
             }
         });
     }
+    @SuppressWarnings("unchecked")
     public <T> T get(String providerName,Class<T> clazz) throws Exception {
         Boolean watched = watchedMap.get(providerName);
         if(watched==null||!watched){
@@ -98,18 +108,28 @@ public class ToyRpcClientZooKeeperContext {
             watchedMap.put(providerName,true);
         }
         Map<String, RpcClientWrapper> providerMap = rpcClientMap.get(providerName);
-        if(providerMap==null){
-            //TODO 没有服务，处理
-            return null;
-        }
-        Set<String> keySet = providerMap.keySet();
-        if(keySet.size()==0){
-            //TODO 没有服务，处理
-            return null;
-        }
-        String[] keys = keySet.toArray(new String[0]);
-        String key=keys[new Random().nextInt(keys.length)];
-        RpcClient rpcClient = providerMap.get(key).getRpcClient();
-        return rpcClient.proxy(clazz);
+        Collection<RpcClientWrapper> values = providerMap.values();
+        return (T)Proxy.newProxyInstance(ToyRpcClientZooKeeperContext.class.getClassLoader(), new Class<?>[]{clazz}, new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                //TODO 使用策略模式
+//                // 随机访问模式
+//                Optional<RpcClientWrapper> wrapperOptional = values.stream().skip(new Random().nextInt(values.size())).findFirst();
+//                RpcClientWrapper rpcClientWrapper = wrapperOptional.orElseGet(null);
+//                RpcClient rpcClient = rpcClientWrapper.getRpcClient();
+//                return method.invoke(rpcClient.proxy(clazz),args);
+
+                List<ServiceInfo> serviceInfos = registry.get(providerName);
+                Optional<ServiceInfo> first = serviceInfos.stream().sorted(Comparator.comparingLong(ServiceInfo::getExecuteTime)).findFirst();
+                ServiceInfo serviceInfo = first.get();
+                RpcClient rpcClient = providerMap.get(serviceInfo.getInstancePath()).getRpcClient();
+                long start=System.currentTimeMillis();
+                Object ans = method.invoke(rpcClient.proxy(clazz), args);
+                serviceInfo.setExecuteTime(System.currentTimeMillis()-start);
+                serviceInfo.setResponseTimeStamp(System.currentTimeMillis());
+                registry.getCurator().setData().forPath(serviceInfo.getInstancePath(),JSON.toJSONBytes(serviceInfo));
+                return ans;
+            }
+        });
     }
 }

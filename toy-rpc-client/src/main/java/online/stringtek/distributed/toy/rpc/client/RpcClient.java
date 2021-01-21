@@ -22,6 +22,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,7 +31,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
-public class RpcClient implements Closeable {
+public class RpcClient implements Closeable,IRpcClient {
     private AtomicLong id;
     private final ExecutorService executorService;
     private EventLoopGroup group;
@@ -40,6 +42,7 @@ public class RpcClient implements Closeable {
         executorService=Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         id=new AtomicLong();
     }
+    private final Map<Class<?>,Object> objMap=new HashMap<>();
 
     public void connect(String ip,int port) throws InterruptedException {
         this.ip=ip;
@@ -66,28 +69,32 @@ public class RpcClient implements Closeable {
         log.info("rpc server({}:{}) connected.",ip,port);
     }
 
-    public Object proxy(String className) throws InterruptedException, ClassNotFoundException {
+    public Object proxy(String className) throws ClassNotFoundException {
         return proxy(Class.forName(className));
     }
 
 
     @SuppressWarnings("unchecked")
-    public <T> T proxy(Class<T> clazz) {
-        return (T)Proxy.newProxyInstance(RpcClient.class.getClassLoader(), new Class<?>[]{clazz}, new InvocationHandler() {
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                RpcRequest rpcRequest=new RpcRequest();
-                rpcRequest.setRequestId(String.valueOf(id.incrementAndGet()));
-                rpcRequest.setClassName(clazz.getName());
-                rpcRequest.setMethodName(method.getName());
-                rpcRequest.setParameterTypes(method.getParameterTypes());
-                rpcRequest.setParameters(args);
-                //TODO 多线程下同时setRpcRequest引发的问题等处理
-                handler.setRpcRequest(rpcRequest);
-                log.info("request {}:{},{}@{} args:{}",ip,port,clazz.getName(),method.getName(),args);
-                return executorService.submit(handler).get();
-            }
-        });
+    public synchronized  <T> T proxy(Class<T> clazz) {
+        if(!objMap.containsKey(clazz)){
+            Object obj = Proxy.newProxyInstance(RpcClient.class.getClassLoader(), new Class<?>[]{clazz}, new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    RpcRequest rpcRequest=new RpcRequest();
+                    rpcRequest.setRequestId(String.valueOf(id.incrementAndGet()));
+                    rpcRequest.setClassName(clazz.getName());
+                    rpcRequest.setMethodName(method.getName());
+                    rpcRequest.setParameterTypes(method.getParameterTypes());
+                    rpcRequest.setParameters(args);
+                    //TODO 多线程下同时setRpcRequest引发的问题等处理
+                    handler.setRpcRequest(rpcRequest);
+                    log.info("request {}:{},{}@{} args:{}",ip,port,clazz.getName(),method.getName(),args);
+                    return executorService.submit(handler).get();
+                }
+            });
+            objMap.put(clazz,obj);
+        }
+        return (T)objMap.get(clazz);
     }
 
     @Override

@@ -33,6 +33,7 @@ public class ToyRpcConfig {
                 .ip(toyRpcConfiguration.getHost())
                 .port(toyRpcConfiguration.getPort())
                 .serviceType(toyRpcConfiguration.getServiceType())
+                .responseTimeStamp(System.currentTimeMillis())
                 .build();
     }
 }
