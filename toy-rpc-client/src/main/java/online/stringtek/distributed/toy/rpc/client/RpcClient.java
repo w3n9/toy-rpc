@@ -32,8 +32,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RpcClient implements Closeable {
     private AtomicLong id;
     private final ExecutorService executorService;
-    private static RpcResponseHandler handler;
     private EventLoopGroup group;
+    private RpcResponseHandler handler;
     private String ip;
     private int port;
     public RpcClient(){
@@ -42,7 +42,9 @@ public class RpcClient implements Closeable {
     }
 
     public void connect(String ip,int port) throws InterruptedException {
-        handler=new RpcResponseHandler();
+        this.ip=ip;
+        this.port=port;
+        this.handler=new RpcResponseHandler();
         group = new NioEventLoopGroup();
         Bootstrap bootstrap=new Bootstrap();
         bootstrap.group(group)
@@ -60,10 +62,8 @@ public class RpcClient implements Closeable {
                         //入站
                     }
                 });
-        this.ip=ip;
-        this.port=port;
         ChannelFuture future = bootstrap.connect(ip, port).sync();
-        log.info("rpc server connected.");
+        log.info("rpc server({}:{}) connected.",ip,port);
     }
 
     public Object proxy(String className) throws InterruptedException, ClassNotFoundException {
