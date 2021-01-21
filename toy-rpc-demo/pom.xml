@@ -35,17 +35,17 @@
             <dependency>
                 <groupId>online.stringtek.distributed</groupId>
                 <artifactId>toy-rpc-client</artifactId>
-                <version>${parent.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
             <dependency>
                 <groupId>online.stringtek.distributed</groupId>
                 <artifactId>toy-rpc-server</artifactId>
-                <version>${parent.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
             <dependency>
                 <groupId>online.stringtek.distributed</groupId>
                 <artifactId>toy-rpc-demo-api</artifactId>
-                <version>${parent.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
 
         </dependencies>

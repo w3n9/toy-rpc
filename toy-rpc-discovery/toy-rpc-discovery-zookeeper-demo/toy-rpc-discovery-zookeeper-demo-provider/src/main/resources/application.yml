@@ -1,0 +1,19 @@
+server:
+  port: 11001
+
+
+
+toy:
+  rpc:
+    host: localhost
+    port: 8001
+    service-type: PROVIDER
+    discovery:
+      zookeeper:
+        ip: 127.0.0.1
+        port: 2181
+        name: ${spring.application.name}
+
+spring:
+  application:
+    name: demo-provider

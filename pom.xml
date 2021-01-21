@@ -13,6 +13,7 @@
         <module>toy-rpc-client</module>
         <module>toy-rpc-server</module>
         <module>toy-rpc-demo</module>
+        <module>toy-rpc-discovery</module>
     </modules>
     <dependencyManagement>
         <dependencies>

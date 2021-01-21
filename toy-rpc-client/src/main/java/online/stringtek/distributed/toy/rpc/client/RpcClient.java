@@ -16,6 +16,8 @@ import online.stringtek.distributed.toy.rpc.core.handler.RpcRequestEncoder;
 import online.stringtek.distributed.toy.rpc.core.handler.RpcResponseDecoder;
 import online.stringtek.distributed.toy.rpc.core.serializer.JSONSerializer;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -27,10 +29,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
-public class RpcClient{
+public class RpcClient implements Closeable {
     private AtomicLong id;
     private final ExecutorService executorService;
     private static RpcResponseHandler handler;
+    private EventLoopGroup group;
+    private String ip;
+    private int port;
     public RpcClient(){
         executorService=Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         id=new AtomicLong();
@@ -38,7 +43,7 @@ public class RpcClient{
 
     public void connect(String ip,int port) throws InterruptedException {
         handler=new RpcResponseHandler();
-        EventLoopGroup group = new NioEventLoopGroup();
+        group = new NioEventLoopGroup();
         Bootstrap bootstrap=new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
@@ -55,6 +60,8 @@ public class RpcClient{
                         //入站
                     }
                 });
+        this.ip=ip;
+        this.port=port;
         ChannelFuture future = bootstrap.connect(ip, port).sync();
         log.info("rpc server connected.");
     }
@@ -77,10 +84,17 @@ public class RpcClient{
                 rpcRequest.setParameters(args);
                 //TODO 多线程下同时setRpcRequest引发的问题等处理
                 handler.setRpcRequest(rpcRequest);
+                log.info("request {}:{},{}@{} args:{}",ip,port,clazz.getName(),method.getName(),args);
                 return executorService.submit(handler).get();
             }
         });
     }
 
-
+    @Override
+    public void close() throws IOException {
+        if(group!=null)
+            group.shutdownGracefully();
+        if(executorService!=null)
+            executorService.shutdown();
+    }
 }

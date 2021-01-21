@@ -1,0 +1,19 @@
+server:
+  port: 12001
+
+
+
+toy:
+  rpc:
+    host: localhost
+    port: 9001
+    type: CONSUMER
+    discovery:
+      zookeeper:
+        ip: 127.0.0.1
+        port: 2181
+        name: ${spring.application.name}
+
+spring:
+  application:
+    name: demo-consumer
