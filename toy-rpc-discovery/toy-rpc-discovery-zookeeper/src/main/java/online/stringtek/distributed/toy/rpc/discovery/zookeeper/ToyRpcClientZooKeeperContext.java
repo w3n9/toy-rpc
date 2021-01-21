@@ -14,6 +14,7 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.ZKUtil;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -24,7 +25,7 @@ public class ToyRpcClientZooKeeperContext {
     private final ZooKeeperRegistry registry;
 
     // k 对应的zk节点路径 | v 对应的Rpc客户端
-    private final Map<String, Map<String,RpcClient>> rpcClientMap;
+    private final Map<String, Map<String,RpcClientWrapper>> rpcClientMap;
     private final Map<String,Boolean> watchedMap;
 
     public ToyRpcClientZooKeeperContext(ZooKeeperRegistry registry){
@@ -34,8 +35,8 @@ public class ToyRpcClientZooKeeperContext {
     }
 
     public void remove(String providerName,String path) throws IOException {
-        Map<String, RpcClient> providerMap = rpcClientMap.get(providerName);
-        RpcClient rpcClient = providerMap.get(path);
+        Map<String, RpcClientWrapper> providerMap = rpcClientMap.get(providerName);
+        RpcClient rpcClient = providerMap.get(path).getRpcClient();
         rpcClient.close();
         providerMap.remove(path);
     }
@@ -53,8 +54,8 @@ public class ToyRpcClientZooKeeperContext {
         rpcClient.connect(ip,port);
         if(!rpcClientMap.containsKey(providerName))
             rpcClientMap.put(providerName,new HashMap<>());
-        Map<String, RpcClient> providerMap = rpcClientMap.get(providerName);
-        providerMap.put(serviceInfo.getInstancePath(),rpcClient);
+        Map<String, RpcClientWrapper> providerMap = rpcClientMap.get(providerName);
+        providerMap.put(serviceInfo.getInstancePath(),new RpcClientWrapper(rpcClient));
     }
     /**
      * 监听provider
@@ -68,21 +69,23 @@ public class ToyRpcClientZooKeeperContext {
         cache.getListenable().addListener(new PathChildrenCacheListener() {
             @Override
             public void childEvent(CuratorFramework curator, PathChildrenCacheEvent event) throws Exception {
-                log.info(new String(event.getData().getData()));
                 String path=event.getData().getPath();
+                log.info(path);
                 ServiceInfo serviceInfo;
                 switch (event.getType()){
                     case CHILD_ADDED:
-                        serviceInfo=JSON.parseObject(ZKPaths.getNodeFromPath(path),ServiceInfo.class);
-                        add(providerName,serviceInfo);
-                        log.info("provider {} up.", serviceInfo);
+                        //不处理，因为我是先create节点之后再set值
                         break;
                     case CHILD_REMOVED:
                         remove(providerName,path);
                         log.info("provider {} down.",event.getData().getPath());
                         break;
                     case CHILD_UPDATED:
-                        //TODO
+                        byte[] bytes = curator.getData().forPath(path);
+                        JSON.parseObject(bytes,ServiceInfo.class);
+                        serviceInfo=JSON.parseObject(new String(bytes),ServiceInfo.class);
+                        add(providerName,serviceInfo);
+                        log.info("provider {} up.", serviceInfo);
                         break;
                 }
             }
@@ -94,18 +97,19 @@ public class ToyRpcClientZooKeeperContext {
             init(providerName);
             watchedMap.put(providerName,true);
         }
-        //TODO 负载均衡
-        Map<String, RpcClient> providerMap = rpcClientMap.get(providerName);
+        Map<String, RpcClientWrapper> providerMap = rpcClientMap.get(providerName);
         if(providerMap==null){
             //TODO 没有服务，处理
+            return null;
         }
         Set<String> keySet = providerMap.keySet();
         if(keySet.size()==0){
             //TODO 没有服务，处理
+            return null;
         }
         String[] keys = keySet.toArray(new String[0]);
         String key=keys[new Random().nextInt(keys.length)];
-        RpcClient rpcClient = providerMap.get(key);
+        RpcClient rpcClient = providerMap.get(key).getRpcClient();
         return rpcClient.proxy(clazz);
     }
 }

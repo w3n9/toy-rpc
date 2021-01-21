@@ -18,8 +18,8 @@ import java.util.List;
 @Data
 @Builder
 public class ZooKeeperRegistry {
-    private static final String DEFAULT_NAMESPACE="toy-rpc";
     private String connectString;
+    private static final String DEFAULT_NAMESPACE="toy-rpc";
     private String namespace;
     private CuratorFramework curator;
     public void init(){
