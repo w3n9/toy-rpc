@@ -1,6 +1,7 @@
 package online.stringtek.distributed.toy.rpc.discovery.zookeeper;
 
 import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
 import online.stringtek.distributed.toy.rpc.client.RpcClient;
 import online.stringtek.distributed.toy.rpc.core.serializer.JSONSerializer;
 import org.apache.curator.framework.CuratorFramework;
@@ -18,6 +19,7 @@ import java.util.*;
 /**
  * Consumer需要使用这个类来维护RpcClient
  */
+@Slf4j
 public class ToyRpcClientZooKeeperContext {
     private final ZooKeeperRegistry registry;
 
@@ -66,17 +68,18 @@ public class ToyRpcClientZooKeeperContext {
         cache.getListenable().addListener(new PathChildrenCacheListener() {
             @Override
             public void childEvent(CuratorFramework curator, PathChildrenCacheEvent event) throws Exception {
-                String newPath = event.getData().getPath();
-                System.out.println(new String(event.getData().getData()));
+                log.info(new String(event.getData().getData()));
                 String path=event.getData().getPath();
                 ServiceInfo serviceInfo;
                 switch (event.getType()){
                     case CHILD_ADDED:
-                        serviceInfo=JSON.parseObject(ZKPaths.getNodeFromPath(newPath),ServiceInfo.class);
+                        serviceInfo=JSON.parseObject(ZKPaths.getNodeFromPath(path),ServiceInfo.class);
                         add(providerName,serviceInfo);
+                        log.info("provider {} up.", serviceInfo);
                         break;
                     case CHILD_REMOVED:
                         remove(providerName,path);
+                        log.info("provider {} down.",event.getData().getPath());
                         break;
                     case CHILD_UPDATED:
                         //TODO
@@ -93,6 +96,9 @@ public class ToyRpcClientZooKeeperContext {
         }
         //TODO 负载均衡
         Map<String, RpcClient> providerMap = rpcClientMap.get(providerName);
+        if(providerMap==null){
+            //TODO 没有服务，处理
+        }
         Set<String> keySet = providerMap.keySet();
         if(keySet.size()==0){
             //TODO 没有服务，处理
