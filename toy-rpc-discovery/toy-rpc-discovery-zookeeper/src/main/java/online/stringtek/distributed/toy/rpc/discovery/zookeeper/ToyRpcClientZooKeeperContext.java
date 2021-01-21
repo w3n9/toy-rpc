@@ -10,6 +10,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.ZKUtil;
 
 import java.io.IOException;
 import java.util.*;
@@ -65,12 +66,13 @@ public class ToyRpcClientZooKeeperContext {
         cache.getListenable().addListener(new PathChildrenCacheListener() {
             @Override
             public void childEvent(CuratorFramework curator, PathChildrenCacheEvent event) throws Exception {
-                System.out.println("trigger event");
+                String newPath = event.getData().getPath();
+                System.out.println(new String(event.getData().getData()));
                 String path=event.getData().getPath();
                 ServiceInfo serviceInfo;
                 switch (event.getType()){
                     case CHILD_ADDED:
-                        serviceInfo=JSON.parseObject(event.getData().getData(),ServiceInfo.class);
+                        serviceInfo=JSON.parseObject(ZKPaths.getNodeFromPath(newPath),ServiceInfo.class);
                         add(providerName,serviceInfo);
                         break;
                     case CHILD_REMOVED:
