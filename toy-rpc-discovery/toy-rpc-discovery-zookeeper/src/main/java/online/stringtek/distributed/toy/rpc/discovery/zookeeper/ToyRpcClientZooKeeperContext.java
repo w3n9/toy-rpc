@@ -61,10 +61,11 @@ public class ToyRpcClientZooKeeperContext {
     public void watch(String providerName) throws Exception {
         String parentPath="/"+providerName+"/providers";
         PathChildrenCache cache = new PathChildrenCache(registry.getCurator(),parentPath, true);
-        cache.start();
+        cache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
         cache.getListenable().addListener(new PathChildrenCacheListener() {
             @Override
             public void childEvent(CuratorFramework curator, PathChildrenCacheEvent event) throws Exception {
+                System.out.println("trigger event");
                 String path=event.getData().getPath();
                 ServiceInfo serviceInfo;
                 switch (event.getType()){
